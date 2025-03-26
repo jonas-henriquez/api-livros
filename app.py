@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import sqlite3
+from flask_cors import CORS
 
 
 
 app = Flask(__name__)
-
+CORS(app)
 def init_db():
     with sqlite3.connect('database.db') as conn:
 
@@ -21,7 +22,7 @@ init_db()
 
 @app.route('/')
 def home_page():
-    return "<h2>Minha pagina com flask</h2>"
+    return render_template('index.html')
 
 
 @app.route('/doar', methods=['POST'])
@@ -65,6 +66,18 @@ def listar_livros():
     return jsonify(livros_formatados)
 
 
+@app.route('/livros/<int:livro_id>', methods=['DELETE'] )
+def deletar_livro(livro_id):
+    with sqlite3.connect('database.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM livros WHERE id = ?", (livro_id,))
+        conn.commit()
+
+    if cursor.rowcount == 0:
+        return jsonify({"erro": "Livro não encontrado"}), 404
+    
+    return jsonify({"menssagem": "Livro excluido com sucesso"}), 200
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
